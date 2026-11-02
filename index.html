@@ -137,7 +137,7 @@ input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-rad
 
   <section class="stage" aria-label="Aperçu">
     <div class="preview-wrap" id="wrap" tabindex="0" aria-label="Aperçu : clique une pièce pour la sélectionner, glisse pour la déplacer"><canvas id="preview" width="720" height="720"></canvas></div>
-    <p class="hint">Clique une pièce pour la sélectionner et glisse pour la déplacer. Molette : taille. Maj + molette : rotation. Flèches : ajustement fin. Suppr : retirer.</p>
+    <p class="hint">Clique une pièce pour la sélectionner et glisse pour la déplacer. Molette : taille. Maj + molette : rotation. Flèches : ajustement fin. Suppr : supprimer le calque sélectionné.</p>
     <div class="variants" id="variants"></div>
   </section>
 
@@ -172,7 +172,7 @@ input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-rad
           <button class="btn" id="lpUp" type="button" title="Passer devant">Devant</button>
           <button class="btn" id="lpDown" type="button" title="Passer derrière">Derrière</button>
           <button class="btn" id="lpDup" type="button">Copier</button>
-          <button class="btn" id="lpDel" type="button">Retirer</button>
+          <button class="btn" id="lpDel" type="button">Supprimer</button>
         </div>
       </div>
     </section>
@@ -526,7 +526,9 @@ function buildLayers(){ const ul=$('layers'); ul.innerHTML=''; const f=cur();
     const mini=document.createElement('div'); mini.className='mini';
     const eye=document.createElement('button'); eye.type='button'; eye.className='icon-btn'; eye.textContent=l.visible?'◉':'○'; eye.setAttribute('aria-label',l.visible?'Masquer':'Afficher');
     eye.addEventListener('click',e=>{ e.stopPropagation(); l.visible=!l.visible; schedule(true); });
-    mini.append(eye); li.append(cv,tx,mini);
+    const del=document.createElement('button'); del.type='button'; del.className='icon-btn danger'; del.textContent='×'; del.title='Supprimer ce calque'; del.setAttribute('aria-label',`Supprimer le calque ${p.name}`);
+    del.addEventListener('click',e=>{ e.stopPropagation(); const f=cur(); f.layers.splice(f.layers.indexOf(l),1); if(state.sel===l.id) state.sel=null; schedule(true); });
+    mini.append(eye,del); li.append(cv,tx,mini);
     const go=()=>{ state.sel=l.id; schedule(true); };
     li.addEventListener('click',go); li.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
     ul.appendChild(li); }); }
