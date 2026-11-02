@@ -332,6 +332,94 @@ const SAMPLES=[
     [-1,1].forEach(s=>{ ell(s*0.15,0.13,0.09,0.09,METAL,'metal'); ell(s*0.15,0.13,0.066,0.066,DARK,'metal',0,0.007); ell(s*0.15,0.13,0.04,0.04,'#151515','flat',0,0.007); rivet(s*0.235,0.0); }); })],
 ];
 
+/* ---------- Garde impérial (pièces centrées sur la figurine) ---------- */
+const CL='#d8d7ce', STRAP='#a39370', GLOVE='#3a332b', WOOD='#7a5532', GUNM='#2c2e33';
+function stitch(pts,closed){ X.save(); X.setLineDash([0.011,0.009]); X.lineWidth=0.0045; X.strokeStyle='rgba(22,17,10,.6)'; X.beginPath(); pts.forEach((p,i)=>i?X.lineTo(p[0],p[1]):X.moveTo(p[0],p[1])); if(closed) X.closePath(); X.stroke(); X.restore(); }
+function stitchRect(cx,cy,w,h,rot=0){ withRot(cx,cy,rot,()=>stitch([[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]],true)); }
+function ellPts(cx,cy,rx,ry,n=40,a0=0,a1=TAU){ const p=[]; for(let i=0;i<=n;i++){ const a=a0+(a1-a0)*i/n; p.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]); } return p; }
+function fold(pts){ X.save(); X.lineCap='round'; X.lineJoin='round'; const path=()=>{ X.beginPath(); pts.forEach((p,i)=>i?X.lineTo(p[0],p[1]):X.moveTo(p[0],p[1])); };
+  X.strokeStyle='rgba(20,16,10,.32)'; X.lineWidth=0.012; path(); X.stroke(); X.translate(-L.x*0.009,-L.y*0.009); X.strokeStyle='rgba(255,255,255,.22)'; X.lineWidth=0.006; path(); X.stroke(); X.restore(); }
+function strap(x1,y1,x2,y2,w,col=STRAP){ const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),rot=Math.atan2(-dx,dy);
+  rr((x1+x2)/2,(y1+y2)/2,w,len,0.004,col,'paint',rot,0.006); withRot((x1+x2)/2,(y1+y2)/2,rot,()=>{ stitch([[-w*0.3,-len/2+0.006],[-w*0.3,len/2-0.006]]); stitch([[w*0.3,-len/2+0.006],[w*0.3,len/2-0.006]]); }); }
+function buckle(x,y,s,rot=0){ withRot(x,y,rot,()=>{ X.beginPath(); X.roundRect(-s/2,-s*0.35,s,s*0.7,s*0.12); X.lineWidth=s*0.2; X.strokeStyle='#a9abaf'; X.stroke(); X.lineWidth=0.004; X.strokeStyle=INK; X.stroke(); X.beginPath(); X.moveTo(0,-s*0.35); X.lineTo(0,s*0.35); X.lineWidth=s*0.08; X.strokeStyle='#8a8c90'; X.stroke(); }); }
+function pouch(cx,cy,w,h,col,rot=0){ withRot(cx,cy,rot,()=>{ rr(0,0,w,h,w*0.18,col,'paint',0,0.007); stitchRect(0,0.004,w*0.78,h*0.74);
+  rr(0,-h*0.22,w*1.04,h*0.52,w*0.2,shade(col,-0.14),'paint',0,0.007); stitchRect(0,-h*0.24,w*0.8,h*0.34); rivet(0,-h*0.04,Math.min(w,h)*0.085); }); }
+function guardHelm(){ ell(0,0,0.137,0.142,shade(CL,-0.1)); ell(0,0.006,0.113,0.119,CL); seam(ellPts(0,0.006,0.084,0.09,30,Math.PI*0.15,Math.PI*0.85)); rivet(-0.104,0.01,0.009); rivet(0.104,0.01,0.009); rr(0,0.12,0.06,0.022,0.008,shade(CL,-0.2),'paint',0,0.006); }
+const GUARD=[
+  ['g-manteau','Manteau long','dos',()=>makePart(0.84,1.0,()=>{
+    withRot(0,0,0,()=>{ X.beginPath(); X.moveTo(-0.23,-0.06); X.quadraticCurveTo(0,-0.1,0.23,-0.06); X.quadraticCurveTo(0.33,0.18,0.37,0.45);
+      [[0.28,0.475],[0.18,0.44],[0.08,0.48],[-0.02,0.45],[-0.12,0.48],[-0.22,0.44],[-0.31,0.475],[-0.37,0.45]].forEach(p=>X.lineTo(p[0],p[1]));
+      X.quadraticCurveTo(-0.33,0.18,-0.23,-0.06); X.closePath(); finish(CL,0.5,'paint'); });
+    fold([[0.12,0.03],[0.15,0.25],[0.18,0.43]]); fold([[-0.12,0.03],[-0.16,0.25],[-0.21,0.43]]); fold([[0.27,0.1],[0.31,0.44]]); fold([[-0.26,0.1],[-0.3,0.44]]); fold([[0.05,0.16],[0.07,0.44]]); fold([[-0.06,0.2],[-0.1,0.45]]);
+    seam([[0,0.25],[0,0.465]]); stitch([[0.34,0.43],[0.27,0.455],[0.18,0.42],[0.08,0.46],[-0.02,0.43],[-0.12,0.46],[-0.22,0.42],[-0.3,0.455],[-0.34,0.43]]);
+    rr(0,0.13,0.18,0.035,0.01,shade(CL,-0.1),'paint',0,0.006); rivet(-0.07,0.13,0.01); rivet(0.07,0.13,0.01);
+    rr(0,-0.05,0.32,0.06,0.03,shade(CL,-0.08)); stitch([[-0.14,-0.04],[0.14,-0.04]]); }), {x:0,y:8,scale:0.88,tint:'A'}],
+  ['g-paquetage','Paquetage','dos',()=>makePart(0.66,0.6,()=>{
+    rr(0.2,0.12,0.03,0.2,0.01,WOOD,'paint',0.32); rr(0.245,0.235,0.08,0.09,0.02,METAL,'metal',0.32);
+    ell(-0.215,0.02,0.055,0.07,'#6c7258'); ell(-0.215,-0.045,0.022,0.018,METAL,'metal'); stitch(ellPts(-0.215,0.02,0.04,0.055,30));
+    rr(0,0.085,0.33,0.25,0.05,CL); stitchRect(0,0.085,0.29,0.21); fold([[-0.12,0.15],[-0.04,0.18]]); fold([[0.13,0.13],[0.06,0.18]]);
+    rr(0,0.03,0.34,0.13,0.04,shade(CL,-0.1)); stitchRect(0,0.03,0.3,0.1);
+    pouch(-0.17,0.15,0.065,0.09,CL,-0.08); pouch(0.17,0.15,0.065,0.09,CL,0.08);
+    strap(-0.08,-0.06,-0.08,0.2,0.032); strap(0.08,-0.06,0.08,0.2,0.032); buckle(-0.08,0.085,0.036); buckle(0.08,0.085,0.036);
+    rr(0,0.235,0.46,0.1,0.05,shade(CL,0.05)); ell(-0.225,0.235,0.022,0.05,shade(CL,-0.18)); ell(0.225,0.235,0.022,0.05,shade(CL,-0.18));
+    seam(ellPts(-0.225,0.235,0.012,0.03,20)); seam(ellPts(0.225,0.235,0.012,0.03,20)); fold([[-0.15,0.205],[0.15,0.205]]); fold([[-0.12,0.262],[0.12,0.262]]);
+    strap(-0.13,0.18,-0.13,0.29,0.022); strap(0.13,0.18,0.13,0.29,0.022);
+    rr(0.13,-0.005,0.085,0.06,0.015,METAL,'metal'); seam([[0.1,-0.005],[0.16,-0.005]]); }), {x:0,y:0,tint:'C'}],
+  ['g-vox','Vox de campagne','dos',()=>makePart(0.62,1.1,()=>{
+    X.save(); X.lineCap='round'; X.strokeStyle=INK; X.lineWidth=0.016; X.beginPath(); X.moveTo(0.1,0.02); X.lineTo(0.24,0.5); X.stroke(); X.strokeStyle='#5a5c60'; X.lineWidth=0.008; X.stroke(); X.restore();
+    ell(0.24,0.5,0.018,0.018,'#a8342c'); hose([[-0.12,0.0],[-0.2,0.06],[-0.19,0.17],[-0.12,0.2]],0.014,'#2a2a2a'); rr(-0.11,0.21,0.05,0.09,0.015,'#2f322b');
+    rr(0,0.1,0.3,0.26,0.03,'#6a6f58'); stitchRect(0,0.1,0.26,0.22); rr(0,0.04,0.24,0.08,0.015,'#3a3d36');
+    [-0.07,0,0.07].forEach(x=>{ ell(x,0.04,0.02,0.02,METAL,'metal'); }); slots(0,0.16,0.18,0.05,6); rivet(-0.12,0.21,0.01); rivet(0.12,0.21,0.01); dots([[0.1,0.16]],0.009,'#5af07a');
+    strap(-0.09,-0.06,-0.09,0.22,0.03); strap(0.09,-0.06,0.09,0.22,0.03); }), {x:0,y:0,tint:'none'}],
+  ['g-treillis','Torse en treillis','corps',()=>makePart(0.62,0.5,()=>{
+    ell(0,0,0.25,0.19,CL); fold([[-0.19,0.04],[-0.09,0.1]]); fold([[0.19,0.04],[0.09,0.1]]); fold([[-0.15,-0.08],[-0.06,-0.1]]); seam([[0,0.04],[0,0.18]]);
+    ell(0,-0.12,0.1,0.04,shade(CL,-0.1)); }), {x:0,y:0,tint:'A'}],
+  ['g-gilet','Gilet pare-éclats','corps',()=>makePart(0.6,0.5,()=>{
+    rr(0,-0.01,0.39,0.3,0.1,CL); X.save(); X.lineWidth=0.006; X.strokeStyle=INK; X.beginPath(); X.roundRect(-0.175,-0.145,0.35,0.27,0.085); X.stroke(); X.restore();
+    stitch([[-0.165,-0.13],[0.165,-0.13],[0.165,0.11],[-0.165,0.11]],true);
+    [-0.07,0.0,0.07].forEach(y=>seam(ellPts(0,y+0.2,0.18,0.2,24,Math.PI*1.28,Math.PI*1.72)));
+    ell(0,-0.02,0.098,0.082,shade(CL,-0.4),'paint',0,0.008);
+    strap(-0.13,0.15,-0.11,-0.12,0.036); strap(0.13,0.15,0.11,-0.12,0.036); buckle(-0.12,0.06,0.04,-0.07); buckle(0.12,0.06,0.04,0.07);
+    rr(0.115,0.035,0.026,0.1,0.01,'#3a332b','paint',0.07); rr(0.113,-0.025,0.03,0.025,0.006,METAL,'metal',0.07);
+    ell(-0.112,0.0,0.03,0.035,'#4f5a3c'); rr(-0.09,-0.002,0.01,0.045,0.004,METAL,'metal'); X.save(); X.lineWidth=0.004; X.strokeStyle='#9a9c9f'; X.beginPath(); X.arc(-0.112,-0.04,0.012,0,TAU); X.stroke(); X.restore();
+    rr(0,-0.13,0.4,0.045,0.01,STRAP,'paint',0,0.006); stitch([[-0.19,-0.14],[0.19,-0.14]]); stitch([[-0.19,-0.12],[0.19,-0.12]]); buckle(0,-0.13,0.055);
+    pouch(-0.115,-0.165,0.075,0.065,'#a99a74'); pouch(0.115,-0.165,0.075,0.065,'#a99a74'); pouch(-0.205,-0.13,0.06,0.06,'#a99a74',-0.45); pouch(0.205,-0.13,0.06,0.06,'#a99a74',0.45); }), {x:0,y:0,tint:'B'}],
+  ['g-bras','Bras en position de tir','bras',()=>makePart(0.74,0.86,()=>{
+    const cuff=(x,y,rot)=>rr(x,y,0.088,0.035,0.012,shade(CL,-0.12),'paint',rot,0.006);
+    limb(0.24,0.02,0.255,-0.08,0.088,CL); limb(0.255,-0.08,0.125,-0.11,0.082,CL); fold([[0.22,-0.03],[0.27,-0.04]]); fold([[0.2,-0.1],[0.19,-0.075]]);
+    cuff(0.15,-0.105,Math.PI/2+0.2); ell(0.112,-0.112,0.046,0.04,GLOVE); seam([[0.09,-0.13],[0.13,-0.135]]);
+    limb(-0.24,0.02,-0.13,-0.19,0.088,CL); limb(-0.13,-0.19,0.055,-0.33,0.082,CL); fold([[-0.2,-0.04],[-0.16,-0.08]]); fold([[-0.1,-0.22],[-0.07,-0.2]]); fold([[-0.03,-0.28],[0.0,-0.27]]);
+    cuff(0.025,-0.31,Math.PI/2+0.65); ell(0.072,-0.342,0.046,0.043,GLOVE); seam([[0.05,-0.365],[0.095,-0.36]]); }), {x:0,y:0,tint:'A'}],
+  ['g-fusil','Fusil laser','bras',()=>makePart(0.74,1.44,()=>{
+    X.save(); X.lineCap='round'; X.beginPath(); X.moveTo(0.13,0.13); X.quadraticCurveTo(0.21,-0.14,0.125,-0.37); X.strokeStyle=INK; X.lineWidth=0.02; X.stroke(); X.strokeStyle='#6a5a3a'; X.lineWidth=0.011; X.stroke(); X.restore();
+    poly([[0.075,0.165],[0.125,0.165],[0.13,0.0],[0.07,0.0]],WOOD); seam([[0.09,0.15],[0.092,0.02]]); seam([[0.11,0.14],[0.108,0.03]]); rr(0.1,0.17,0.06,0.02,0.005,GUNM,'metal');
+    rr(0.1,-0.15,0.08,0.3,0.015,GUNM); slots(0.1,-0.2,0.13,0.028,5,Math.PI/2); seam([[0.068,-0.05],[0.132,-0.05]]);
+    rr(0.153,-0.12,0.045,0.11,0.01,'#3e4247','metal'); dots([[0.153,-0.095]],0.008,'#5af07a'); slots(0.153,-0.14,0.03,0.012,3);
+    rr(0.1,-0.03,0.03,0.07,0.008,'#43474d','metal'); ell(0.1,-0.012,0.012,0.012,'#7fb0c8','metal',0,0.004);
+    rr(0.1,-0.33,0.072,0.11,0.02,WOOD); seam([[0.085,-0.37],[0.087,-0.29]]); seam([[0.115,-0.37],[0.113,-0.29]]);
+    rr(0.1,-0.46,0.036,0.2,0.01,METAL,'metal'); for(let y=-0.4;y>-0.54;y-=0.028) rr(0.1,y,0.048,0.011,0.004,'#6a6d72','metal',0,0.003);
+    rr(0.1,-0.565,0.046,0.03,0.008,GUNM,'metal'); rr(0.1,-0.505,0.015,0.03,0.004,'#43474d','metal'); }), {x:0,y:0,tint:'none'}],
+  ['g-epaule','Épaulière pare-éclats','epaule',()=>makePart(0.24,0.26,()=>{
+    ell(0,0,0.09,0.1,CL); seam(ellPts(0,0.02,0.07,0.075,24,Math.PI*1.1,Math.PI*1.9)); seam(ellPts(0,0.04,0.055,0.055,20,Math.PI*1.15,Math.PI*1.85));
+    stitch(ellPts(0,0,0.075,0.085,36)); rivet(0,-0.072,0.01); rivet(-0.06,0.05,0.008); rivet(0.06,0.05,0.008); }), {x:118,y:0,scale:0.78,mirror:true,tint:'B'}],
+  ['g-casque','Casque & lunettes','tete',()=>makePart(0.36,0.4,()=>{
+    guardHelm(); X.save(); X.lineWidth=0.016; X.strokeStyle=INK; X.beginPath(); X.ellipse(0,0.006,0.116,0.122,0,Math.PI*0.95,Math.PI*2.05,true); X.stroke(); X.lineWidth=0.009; X.strokeStyle='#4a4238'; X.stroke(); X.restore();
+    rr(0,-0.108,0.05,0.022,0.008,GUNM,'metal'); ell(-0.048,-0.11,0.036,0.029,'#6f8d9c','metal'); ell(0.048,-0.11,0.036,0.029,'#6f8d9c','metal');
+    X.fillStyle='rgba(255,255,255,.7)'; [[-0.058,-0.12],[0.038,-0.12]].forEach(p=>{ X.beginPath(); X.arc(p[0],p[1],0.008,0,TAU); X.fill(); }); }), {x:0,y:-14,scale:0.66,tint:'B'}],
+  ['g-masque','Casque & masque à gaz','tete',()=>makePart(0.36,0.44,()=>{
+    hose([[0.035,-0.16],[0.12,-0.13],[0.15,-0.02]],0.022,'#3a3a36'); guardHelm();
+    rr(0,-0.145,0.095,0.075,0.03,'#4a4a44'); ell(-0.03,-0.13,0.022,0.018,'#6f8d9c','metal'); ell(0.03,-0.13,0.022,0.018,'#6f8d9c','metal');
+    ell(0,-0.19,0.036,0.03,METAL,'metal'); slots(0,-0.19,0.04,0.012,4); }), {x:0,y:-14,scale:0.66,tint:'B'}],
+  ['g-officier','Casquette d\'officier','tete',()=>makePart(0.34,0.38,()=>{
+    ell(0,0,0.128,0.132,CL); seam(ellPts(0,0,0.095,0.1,36)); rr(0,-0.098,0.17,0.022,0.008,'#c9a227','metal',0,0.006);
+    ell(0,-0.132,0.11,0.048,'#16171a','metal'); ell(0,-0.1,0.021,0.021,'#d8b23a','metal'); }), {x:0,y:-14,scale:0.66,tint:'A'}],
+  ['g-tete','Tête nue','tete',()=>makePart(0.32,0.34,()=>{
+    ell(-0.112,0,0.024,0.036,'#c9967a'); ell(0.112,0,0.024,0.036,'#c9967a'); ell(0,0,0.11,0.125,'#c9967a'); ell(0,0.028,0.102,0.1,'#3a2a20');
+    const r=rng(77); X.save(); X.lineCap='round'; X.lineWidth=0.004; for(let i=0;i<70;i++){ const a=Math.PI*(0.05+r()*0.9), d=r()*0.09; const x=Math.cos(a)*d, y=0.03+Math.sin(a)*d*1.0; X.strokeStyle=r()<0.5?'rgba(0,0,0,.35)':'rgba(255,255,255,.12)'; X.beginPath(); X.moveTo(x,y); X.lineTo(x+(r()-0.5)*0.02,y+0.015); X.stroke(); } X.restore();
+    ell(0,-0.125,0.022,0.018,'#bd8569'); }), {x:0,y:-14,scale:0.66,tint:'none'}],
+];
+SAMPLES.push(...GUARD);
+
 /* ---------- Socles procéduraux ---------- */
 function drawBase(cfg,r){
   const t=cfg.terrain;
@@ -368,7 +456,7 @@ function noise(){ if(NOISE) return NOISE;
 /* ---------- Données ---------- */
 const CATS=[['corps','Corps'],['tete','Tête'],['epaule','Épaulière'],['bras','Bras & armes'],['dos','Dos'],['accessoire','Accessoire'],['socle','Socle']];
 const CATL=Object.fromEntries(CATS);
-const ORDER={socle:0,dos:1,bras:2,corps:3,epaule:4,tete:5,accessoire:6};
+const ORDER={socle:0,dos:1,corps:2,bras:3,epaule:4,tete:5,accessoire:6};
 const DEF={corps:{x:0,y:0,tint:'A'},tete:{x:0,y:-28,tint:'none'},epaule:{x:188,y:0,mirror:true,tint:'A'},bras:{x:-211,y:-150,tint:'none'},dos:{x:0,y:141,tint:'A'},accessoire:{x:0,y:0,tint:'none'},socle:{x:0,y:0,tint:'none'}};
 const VARIANTS=[{k:'normal',l:'Normal'},{k:'blesse',l:'Blessé'},{k:'terre',l:'À terre'},{k:'mort',l:'Mort'},{k:'nuit',l:'Nuit'},{k:'invisible',l:'Invisible'}];
 const lib=new Map(); // id -> {id,name,cat,img,w,h,sample,blob}
@@ -385,9 +473,9 @@ function guessCat(name){ const n=name.toLowerCase();
   if(/socle|base/.test(n)) return 'socle';
   return 'accessoire'; }
 function layerFor(partId, fig){
-  const p=lib.get(partId), d=DEF[p.cat]||DEF.accessoire;
-  const l={id:uid(), part:partId, x:d.x, y:d.y, scale:1, rot:0, flip:false, mirror:!!d.mirror, visible:true, tint:d.tint, color:'#8a2a24', mode:'multiply', strength:1};
-  if(p.cat==='bras' && fig && fig.layers.some(o=>lib.get(o.part)?.cat==='bras' && o.x<0)) l.x=-l.x;
+  const p=lib.get(partId), d=p.def?Object.assign({},DEF[p.cat]||DEF.accessoire,p.def):(DEF[p.cat]||DEF.accessoire);
+  const l={id:uid(), part:partId, x:d.x, y:d.y, scale:d.scale||1, rot:0, flip:false, mirror:!!d.mirror, visible:true, tint:d.tint, color:'#8a2a24', mode:'multiply', strength:1};
+  if(!p.def && p.cat==='bras' && fig && fig.layers.some(o=>lib.get(o.part)?.cat==='bras' && o.x<0)) l.x=-l.x;
   return l; }
 function newFig(name){ return {id:uid(), name:name||'Figurine', layers:[], colors:{A:'#aab4bf',B:'#d0a94e',C:'#a8342c'}, terrain:'none', disp:'none', angle:0, scale:1, outline:4, wear:0.45, shadow:true, seed:Math.floor(Math.random()*1e9)}; }
 function addLayer(fig, l){ const o=ORDER[lib.get(l.part).cat]??6; let i=fig.layers.length; while(i>0 && (ORDER[lib.get(fig.layers[i-1].part)?.cat]??6)>o) i--; fig.layers.splice(i,0,l); }
@@ -398,7 +486,11 @@ function defaultFigs(){
   const b=newFig('Servitor de combat'); b.colors={A:'#a83a30',B:'#d0a94e',C:'#3a3c41'}; b.terrain='dalles'; b.disp='friendly'; b.scale=0.85;
   const L2=(id,o)=>Object.assign(layerFor(id,b),o);
   [L2('s-dos'),L2('s-bras-bolter',{x:-200,y:-140,rot:-6}),L2('s-bras-pince',{x:205,y:-150,rot:12}),L2('s-corps'),L2('s-ep-ronde'),L2('s-casque')].forEach(l=>b.layers.push(l));
-  return [a,b]; }
+  return [a,b,guardFig()]; }
+function guardFig(){
+  const g=newFig('Garde impérial'); g.colors={A:'#b3ae78',B:'#8c9a74',C:'#9a8462'}; g.scale=1.65; g.terrain='gravats';
+  ['g-manteau','g-paquetage','g-treillis','g-gilet','g-fusil','g-bras','g-epaule','g-casque'].forEach(id=>g.layers.push(layerFor(id,g)));
+  return g; }
 
 /* ---------- Rendu ---------- */
 const tintCache=new Map();
@@ -665,14 +757,17 @@ let tt=0; function toast(m){ const el=$('toast'); el.textContent=m; el.hidden=fa
 /* ---------- Démarrage ---------- */
 (async()=>{
   CATS.forEach(([k,lab])=>{ const o=document.createElement('option'); o.value=k; o.textContent=lab; $('importCat').appendChild(o); });
-  SAMPLES.forEach(([id,name,cat,mk])=>{ const c=mk(); lib.set(id,{id,name,cat,img:c,w:c.width,h:c.height,sample:true}); });
-  state.figs=defaultFigs();
+  SAMPLES.forEach(([id,name,cat,mk,def])=>{ const c=mk(); lib.set(id,{id,name,cat,img:c,w:c.width,h:c.height,sample:true,def}); });
+  state.figs=defaultFigs(); state.cur=2;
   buildTabs(); buildLib(); fillPartSelect(); buildVariants(); schedule(true);
   if(await idb.open()){
     const parts=await idb.get('parts')||[];
     for(const p of parts){ try{ await addPartFromBlob(p.blob,p.name,p.cat,p.id); }catch(e){} }
     const saved=await idb.get('figs');
-    if(saved&&saved.figs&&saved.figs.length){ state.figs=saved.figs.map(f=>Object.assign(newFig(),f)); state.cur=Math.min(saved.cur||0,state.figs.length-1); }
+    if(saved&&saved.figs&&saved.figs.length){ state.figs=saved.figs.map(f=>Object.assign(newFig(),f)); state.cur=Math.min(saved.cur||0,state.figs.length-1);
+      let offered=false; try{ offered=localStorage.getItem('effigy-guard')==='1'; }catch(e){}
+      if(!offered && !state.figs.some(f=>f.layers.some(l=>String(l.part).startsWith('g-')))){ state.figs.push(guardFig()); state.cur=state.figs.length-1; } }
+    try{ localStorage.setItem('effigy-guard','1'); }catch(e){}
     if(parts.length||saved){ buildLib(); fillPartSelect(); schedule(true); }
   } else { $('saveNote').textContent='La sauvegarde dans ce navigateur est indisponible ici. Pense à « Sauver le projet ».'; }
   ready=true;
