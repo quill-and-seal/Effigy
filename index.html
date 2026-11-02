@@ -66,14 +66,16 @@ header p{margin:0;color:var(--muted);font-size:.95rem}
 #preview{width:100%;height:100%;display:block}
 .hint{font-size:.84rem;color:var(--muted);text-align:center;margin:0;max-width:560px}
 .variants{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;width:100%}
-.var{position:relative;display:grid;gap:4px;justify-items:center;padding:6px 4px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--panel);font-size:.8rem;text-align:center}
-.var canvas{width:100%;max-width:84px;aspect-ratio:1;display:block}
-.var input{position:absolute;opacity:0;pointer-events:none}
-.var:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
-.var:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
-.var .lb{display:flex;gap:4px;align-items:center}
-.var .box{width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;display:inline-block}
-.var:has(input:checked) .box{background:var(--accent);border-color:var(--accent)}
+.var{display:grid;gap:4px;padding:5px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:.8rem;text-align:center;min-width:0}
+.var[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.var .vb{border:0;background:transparent;padding:0;cursor:pointer;display:grid;gap:3px;justify-items:center;font-size:.8rem;border-radius:6px}
+.var .vb canvas{width:100%;max-width:84px;aspect-ratio:1;display:block}
+.var[aria-current="true"] .vb span{font-weight:700;color:var(--accent)}
+.var .ex{display:flex;gap:5px;align-items:center;justify-content:center;font-size:.74rem;color:var(--muted);cursor:pointer;border-top:1px solid var(--line);padding-top:4px}
+.var .ex input{accent-color:var(--accent);width:14px;height:14px;margin:0}
+.viewbar{display:flex;gap:8px;align-items:center;font-size:.85rem;background:var(--accent-soft);border:1px solid var(--accent);border-radius:999px;padding:3px 4px 3px 12px}
+.viewbar button{border:0;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:3px 10px;cursor:pointer;font-size:.8rem;font-weight:700}
+.viewbar[hidden]{display:none!important}
 
 .f{display:grid;gap:4px;font-size:.86rem;min-width:0}
 .f > span{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
@@ -137,6 +139,7 @@ input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-rad
 
   <section class="stage" aria-label="Aperçu">
     <div class="preview-wrap" id="wrap" tabindex="0" aria-label="Aperçu : clique une pièce pour la sélectionner, glisse pour la déplacer"><canvas id="preview" width="720" height="720"></canvas></div>
+    <div class="viewbar" id="viewbar" hidden><span id="viewLabel"></span><button type="button" id="viewReset">Revenir à Normal</button></div>
     <p class="hint">Clique une pièce pour la sélectionner et glisse pour la déplacer. Molette : taille. Maj + molette : rotation. Flèches : ajustement fin. Suppr : supprimer le calque sélectionné.</p>
     <div class="variants" id="variants"></div>
   </section>
@@ -214,7 +217,7 @@ input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-rad
       </div>
       <button class="btn primary" id="exportOne" type="button">Exporter cette figurine</button>
       <button class="btn" id="exportAll" type="button">Exporter l'escouade (ZIP)</button>
-      <p class="note" id="exportNote">Les états cochés sous l'aperçu sont inclus.</p>
+      <p class="note" id="exportNote">Les états cochés « Exporter » sous l'aperçu sont inclus.</p>
       <div class="sub">
         <h3>Projet</h3>
         <div class="grid2">
@@ -460,7 +463,7 @@ const ORDER={socle:0,dos:1,corps:2,bras:3,epaule:4,tete:5,accessoire:6};
 const DEF={corps:{x:0,y:0,tint:'A'},tete:{x:0,y:-28,tint:'none'},epaule:{x:188,y:0,mirror:true,tint:'A'},bras:{x:-211,y:-150,tint:'none'},dos:{x:0,y:141,tint:'A'},accessoire:{x:0,y:0,tint:'none'},socle:{x:0,y:0,tint:'none'}};
 const VARIANTS=[{k:'normal',l:'Normal'},{k:'blesse',l:'Blessé'},{k:'terre',l:'À terre'},{k:'mort',l:'Mort'},{k:'nuit',l:'Nuit'},{k:'invisible',l:'Invisible'}];
 const lib=new Map(); // id -> {id,name,cat,img,w,h,sample,blob}
-const state={ figs:[], cur:0, sel:null, filter:'all', size:400, fmt:'webp', vars:{normal:true,blesse:false,terre:false,mort:false,nuit:false,invisible:false} };
+const state={ figs:[], cur:0, sel:null, view:'normal', filter:'all', size:400, fmt:'webp', vars:{normal:true,blesse:false,terre:false,mort:false,nuit:false,invisible:false} };
 try{ const s=JSON.parse(localStorage.getItem('effigy-ui')||'null'); if(s){ state.size=s.size||400; state.fmt=s.fmt||'webp'; Object.assign(state.vars,s.vars||{}); } }catch(e){}
 const persistUI=()=>{ try{ localStorage.setItem('effigy-ui',JSON.stringify({size:state.size,fmt:state.fmt,vars:state.vars})); }catch(e){} };
 
@@ -543,7 +546,7 @@ function schedule(lists=false){ pendLists=pendLists||lists; cancelAnimationFrame
 function draw(lists){
   const f=cur();
   if(!f){ preview.getContext('2d').clearRect(0,0,720,720); } else {
-    render(f,'normal',720,preview);
+    render(f,state.view,720,preview);
     const l=selLayer(); if(l&&l.visible&&lib.get(l.part)){ const p=lib.get(l.part), pc=preview.getContext('2d');
       [1].concat(l.mirror?[-1]:[]).forEach(m=>{ const M=matrix(f,l,m,720); const pts=[[-p.w/2,-p.h/2],[p.w/2,-p.h/2],[p.w/2,p.h/2],[-p.w/2,p.h/2]].map(q=>M.transformPoint({x:q[0],y:q[1]}));
         pc.save(); pc.setLineDash([8,6]); pc.lineWidth=2; pc.strokeStyle=m===1?'#d4a24c':'rgba(212,162,76,.5)'; pc.beginPath(); pts.forEach((q,i)=>i?pc.lineTo(q.x,q.y):pc.moveTo(q.x,q.y)); pc.closePath(); pc.stroke(); pc.restore(); }); }
@@ -552,6 +555,8 @@ function draw(lists){
   }
   if(lists){ buildFigs(); buildLayers(); }
   syncProps(); syncFig(); updateExportNote();
+  document.querySelectorAll('#variants .var').forEach(el=>el.setAttribute('aria-current',el.dataset.v===state.view?'true':'false'));
+  const vv=VARIANTS.find(v=>v.k===state.view); $('viewbar').hidden=state.view==='normal'; $('viewLabel').textContent=`Aperçu : ${vv?vv.l:''}`;
 }
 
 /* ---------- Bibliothèque ---------- */
@@ -687,9 +692,12 @@ wrap.addEventListener('keydown',e=>{ const l=selLayer(); if(!l) return; const st
 
 /* ---------- Variantes d'état ---------- */
 function buildVariants(){ const box=$('variants'); box.innerHTML='';
-  VARIANTS.forEach(v=>{ const lab=document.createElement('label'); lab.className='var';
-    lab.innerHTML=`<input type="checkbox" id="var-${v.k}" ${state.vars[v.k]?'checked':''}><canvas data-v="${v.k}" width="168" height="168"></canvas><span class="lb"><span class="box"></span>${v.l}</span>`;
-    lab.querySelector('input').addEventListener('change',e=>{ state.vars[v.k]=e.target.checked; persistUI(); updateExportNote(); }); box.appendChild(lab); }); }
+  VARIANTS.forEach(v=>{ const card=document.createElement('div'); card.className='var'; card.dataset.v=v.k;
+    card.innerHTML=`<button type="button" class="vb" title="Voir cet état dans l'aperçu"><canvas data-v="${v.k}" width="168" height="168"></canvas><span>${v.l}</span></button><label class="ex"><input type="checkbox" id="var-${v.k}" ${state.vars[v.k]?'checked':''}> Exporter</label>`;
+    card.querySelector('.vb').addEventListener('click',()=>{ state.view=v.k; schedule(); });
+    card.querySelector('input').addEventListener('change',e=>{ state.vars[v.k]=e.target.checked; persistUI(); updateExportNote(); });
+    box.appendChild(card); }); }
+$('viewReset').addEventListener('click',()=>{ state.view='normal'; schedule(); });
 
 /* ---------- Export ---------- */
 let dl=null, mode='wait';
