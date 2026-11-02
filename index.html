@@ -75,9 +75,9 @@ header p{margin:0;color:var(--muted);font-size:.95rem}
 .var .box{width:12px;height:12px;border:1.5px solid var(--muted);border-radius:3px;display:inline-block}
 .var:has(input:checked) .box{background:var(--accent);border-color:var(--accent)}
 
-label.f{display:grid;gap:4px;font-size:.86rem;min-width:0}
-label.f > span{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
-label.f output{font:500 .78rem var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.f{display:grid;gap:4px;font-size:.86rem;min-width:0}
+.f > span{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
+.f output{font:500 .78rem var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=text],select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg)}
 input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:2px;cursor:pointer}
@@ -186,12 +186,12 @@ input[type=color]{width:100%;height:30px;border:1px solid var(--line);border-rad
         <label class="f"><span>Teinte C</span><input type="color" id="fC"></label>
       </div>
       <div class="grid2">
-        <label class="f"><span>Socle</span>
-          <select id="fTerrain">
-            <option value="none">Sans socle</option><option value="cendre">Cendres</option><option value="gravats">Gravats urbains</option><option value="dalles">Dalles de métal</option>
+        <div class="f"><span><label class="check" style="font-size:inherit"><input type="checkbox" id="fBase"> Socle</label></span>
+          <select id="fTerrain" aria-label="Terrain du socle">
+            <option value="cendre">Cendres</option><option value="gravats">Gravats urbains</option><option value="dalles">Dalles de métal</option>
             <option value="herbe">Herbe morte</option><option value="desert">Désert</option><option value="neige">Neige</option><option value="lave">Lave</option>
           </select>
-        </label>
+        </div>
         <label class="f"><span>Angle <output id="oA"></output></span><input type="range" id="fAngle" min="0" max="359" step="1"></label>
         <label class="f"><span>Échelle <output id="oFS"></output></span><input type="range" id="fScale" min="0.4" max="1.6" step="0.01"></label>
         <label class="f"><span>Contour encré <output id="oO"></output></span><input type="range" id="fOutline" min="0" max="10" step="0.5"></label>
@@ -483,12 +483,12 @@ function addLayer(fig, l){ const o=ORDER[lib.get(l.part).cat]??6; let i=fig.laye
 function defaultFigs(){
   const a=newFig('Servitor'); const L1=(id,o)=>Object.assign(layerFor(id,a),o);
   [L1('s-dos'),L1('s-bras-pince',{x:-205,y:-150,rot:-14}),L1('s-bras-perceuse',{x:205,y:-140,rot:10}),L1('s-corps'),L1('s-ep-rect'),L1('s-crane')].forEach(l=>a.layers.push(l));
-  const b=newFig('Servitor de combat'); b.colors={A:'#a83a30',B:'#d0a94e',C:'#3a3c41'}; b.terrain='dalles'; b.disp='friendly'; b.scale=0.85;
+  const b=newFig('Servitor de combat'); b.colors={A:'#a83a30',B:'#d0a94e',C:'#3a3c41'}; b.disp='friendly'; b.scale=0.85;
   const L2=(id,o)=>Object.assign(layerFor(id,b),o);
   [L2('s-dos'),L2('s-bras-bolter',{x:-200,y:-140,rot:-6}),L2('s-bras-pince',{x:205,y:-150,rot:12}),L2('s-corps'),L2('s-ep-ronde'),L2('s-casque')].forEach(l=>b.layers.push(l));
   return [a,b,guardFig()]; }
 function guardFig(){
-  const g=newFig('Garde impérial'); g.colors={A:'#b3ae78',B:'#8c9a74',C:'#9a8462'}; g.scale=1.65; g.terrain='gravats';
+  const g=newFig('Garde impérial'); g.colors={A:'#b3ae78',B:'#8c9a74',C:'#9a8462'}; g.scale=1.65;
   ['g-manteau','g-paquetage','g-treillis','g-gilet','g-fusil','g-bras','g-epaule','g-casque'].forEach(id=>g.layers.push(layerFor(id,g)));
   return g; }
 
@@ -648,15 +648,16 @@ $('lpDel').addEventListener('click',delLayer);
 
 /* ---------- Figurine ---------- */
 function syncFig(){ const f=cur(); const dis=!f;
-  ['fName','fA','fB','fC','fTerrain','fAngle','fScale','fOutline','fWear','fShadow','figDup','figVary','figSquad'].forEach(id=>$(id).disabled=dis); if(!f) return;
+  ['fName','fA','fB','fC','fBase','fAngle','fScale','fOutline','fWear','fShadow','figDup','figVary','figSquad'].forEach(id=>$(id).disabled=dis); if(!f) return;
   if(document.activeElement!==$('fName')) $('fName').value=f.name;
-  $('fA').value=f.colors.A; $('fB').value=f.colors.B; $('fC').value=f.colors.C; $('fTerrain').value=f.terrain;
+  $('fA').value=f.colors.A; $('fB').value=f.colors.B; $('fC').value=f.colors.C; const on=f.terrain!=='none'; $('fBase').checked=on; $('fTerrain').value=on?f.terrain:(f.lastTerrain||'cendre'); $('fTerrain').disabled=!on; document.querySelectorAll('#fDisp button').forEach(b=>b.disabled=!on);
   $('fAngle').value=f.angle; $('oA').textContent=f.angle+'°'; $('fScale').value=f.scale; $('oFS').textContent='×'+(+f.scale).toFixed(2);
   $('fOutline').value=f.outline; $('oO').textContent=f.outline; $('fWear').value=f.wear; $('oW').textContent=Math.round(f.wear*100)+' %'; $('fShadow').checked=f.shadow; setSeg('fDisp',f.disp); }
 $('fName').addEventListener('input',e=>{ const f=cur(); if(!f) return; f.name=e.target.value; const nm=document.querySelector(`#figs .item[data-id="${f.id}"] .nm`); if(nm) nm.textContent=f.name||'Sans nom'; persistSoon(); });
 [['fA','A'],['fB','B'],['fC','C']].forEach(([id,k])=>$(id).addEventListener('input',e=>{ const f=cur(); if(f){ f.colors[k]=e.target.value; schedule(); } }));
 const bindF=(id,key,conv=v=>+v,ev='input')=>$(id).addEventListener(ev,e=>{ const f=cur(); if(f){ f[key]=conv(e.target.value); schedule(); } });
-bindF('fTerrain','terrain',v=>v,'change'); bindF('fAngle','angle'); bindF('fScale','scale'); bindF('fOutline','outline'); bindF('fWear','wear');
+bindF('fTerrain','terrain',v=>v,'change');
+$('fBase').addEventListener('change',e=>{ const f=cur(); if(!f) return; if(e.target.checked){ f.terrain=f.lastTerrain||'cendre'; } else { if(f.terrain!=='none') f.lastTerrain=f.terrain; f.terrain='none'; } schedule(); }); bindF('fAngle','angle'); bindF('fScale','scale'); bindF('fOutline','outline'); bindF('fWear','wear');
 $('fShadow').addEventListener('change',e=>{ const f=cur(); if(f){ f.shadow=e.target.checked; schedule(); } });
 document.querySelectorAll('#fDisp button').forEach(b=>b.addEventListener('click',()=>{ const f=cur(); if(f){ f.disp=b.dataset.v; schedule(); } }));
 
